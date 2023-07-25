@@ -1,6 +1,6 @@
 from asyncio import sleep, timeout
 from aiogram.exceptions import TelegramRetryAfter, TelegramBadRequest
-from db_service import get_subs
+from services.db_service import get_subs
 
 
 

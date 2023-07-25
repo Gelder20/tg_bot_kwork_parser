@@ -12,7 +12,7 @@ import warnings # no idea why this class is not recommended to inherit
 warnings.filterwarnings('ignore', message='Inheritance class KworkParser from ClientSession is discouraged')
 
 
-from db_service import get_orders, new_order
+from services.db_service import get_orders, new_order
 
 
 

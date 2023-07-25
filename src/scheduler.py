@@ -21,7 +21,7 @@ async def scheduler(bot, parser, delay=10):
 			print('New parser created')
 
 			continue
-		print('Взял')
+
 		while views: # it is assumed that views is much smaller than get_subs()
 			# the mailing list may be delayed if there are a lot of chats,
 			# so after each order, new subs are received

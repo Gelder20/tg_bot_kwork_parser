@@ -2,3 +2,5 @@
 flat_files/old_orders.txt
 flat_files/subs.text
 
+#config
+src/config.ini

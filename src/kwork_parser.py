@@ -20,38 +20,6 @@ from services.db_service import get_orders, new_order
 OrderView = namedtuple('OrderView', 'message, url')
 
 
-async def parse():
-	async with ClientSession('https://kwork.ru') as session:
-		async with session.get('/projects?c=41&attr=3587') as response:
-			if response.status != 200:
-				raise HTTPError("Request attempt to '/projects?c=41&attr=3587' failed")
-
-			html = await response.text()
-		payload = html.split('\n')[39].split('window.stateData=')[1].split('</script>')[0][:-1]
-		payload = loads(payload)['wantsListData']['pagination']['data']
-		views = []
-		for order in payload:
-			view = []
-			view.append(f"{order['name']}")
-			price = int(float(order['price_limit']))
-			if order['allow_higher_price']:
-				view.append(f'Желаемый бюджет: до {price}')
-				view.append(f'Допустимый: до {price*3}')
-			else:
-				view.append(f'Цена: до {price}')
-			view.append(f'Откликов на момент поста: {order["kwork_count"]}')
-			view.append('')
-			view.append(order['desc'])
-			views.append('\n'.join(view))
-		# from pprint import pprint
-		# pprint(order)
-		for view in views:
-			print(view)
-			print()
-			print()
-
-
-
 class KworkParser(ClientSession):
 	executor: ThreadPoolExecutor = None
 

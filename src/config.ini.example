@@ -1,2 +1,8 @@
 [bot]
 token = 
+
+[database]
+user = 
+password = 
+database = 
+host = 

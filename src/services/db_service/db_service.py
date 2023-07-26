@@ -1,4 +1,26 @@
-# TODO: async db_srevies support and connection object with pattern repo
+from asyncpg import Connection
+from abc import ABC, abstractmethod
+
+
+
+
+class Repo_interface(ABC):
+	@abstractmethod
+	async def get_orders(self, /, ): pass
+
+	@abstractmethod
+	async def new_order(self, /, id_: str): pass
+
+	@abstractmethod
+	async def get_subs(self, /, ): pass
+
+	@abstractmethod
+	async def new_sub(self, /, id_: str): pass
+
+	@abstractmethod
+	async def del_sub(self, /, id_: str): pass
+
+
 
 
 def get_orders():

@@ -17,6 +17,7 @@ from services.db_service import get_orders, new_order
 
 
 
+# TODO: dataclass
 OrderView = namedtuple('OrderView', 'message, url')
 
 

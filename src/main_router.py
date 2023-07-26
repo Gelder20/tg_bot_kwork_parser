@@ -2,7 +2,7 @@ from aiogram.filters.command import Command
 from aiogram.types import Message
 from aiogram import Router
 
-from db_service import new_sub, del_sub, get_subs
+from services.db_service import new_sub, del_sub, get_subs
 
 
 

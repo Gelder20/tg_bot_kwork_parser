@@ -2,7 +2,7 @@ from asyncio import run, TaskGroup, get_event_loop
 from aiogram import Dispatcher
 
 from config import load_config
-from kwork_parser import KworkParser
+from services.kwork_parser_service import KworkParser
 from cli import cli
 from main_router import router
 from scheduler import scheduler

@@ -1,6 +1,7 @@
 from asyncio import run, TaskGroup, get_event_loop
 from aiogram import Dispatcher
 
+from config import load_config
 from kwork_parser import KworkParser
 from cli import cli
 from main_router import router
@@ -12,7 +13,9 @@ from bot import Bot
 
 @cli
 async def main():
-	bot = Bot(token='TOKEN')
+	#TODO перенести создание бота отсюда
+	config = load_config("config.ini")
+	bot = Bot(token=config.bot.token)
 	dp = Dispatcher()
 	dp.include_router(router)
 	parser = KworkParser.create()

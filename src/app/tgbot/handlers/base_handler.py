@@ -36,4 +36,4 @@ async def unsub(message: Message, repo: Repo_interface):
 		await message.answer('В этот чат больше не будут приходить уведомления.')
 
 	else:
-		await message.answer('В этот чат и до этого ничего не приходили уведомления.')
+		await message.answer('В этот чат и до не приходили уведомления.')

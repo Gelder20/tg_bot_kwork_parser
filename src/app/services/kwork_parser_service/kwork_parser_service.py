@@ -80,8 +80,8 @@ class KworkParser(ClientSession):
 
 
 	# here I slightly redefined the parent method, but I didn't change its logic a bit
-	def close(self, *args, **kwargs):
+	async def close(self, *args, **kwargs):
 		response = super().close(*args, **kwargs)
 		self.executor.shutdown()
-		return response
+		return await response
 

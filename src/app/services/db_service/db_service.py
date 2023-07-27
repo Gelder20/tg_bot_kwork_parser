@@ -16,6 +16,9 @@ class Repo_interface(ABC):
 	async def new_order(self, /, id_: int) -> None: pass
 
 	@abstractmethod
+	async def has_order(self, /, pk: int) -> bool:
+
+	@abstractmethod
 	async def get_subs(self, /) -> tuple[str, ...]: pass
 
 	@abstractmethod
@@ -55,6 +58,10 @@ class Repo_psql(Repo_interface):
 			INSERT INTO orders
 			VALUES ($1);
 		""", id_)
+
+
+	async def has_order(self, /, pk: int) -> bool:
+		return await conn.fetchval("SELECT EXISTS (SELECT * FROM orders WHERE id = $1)", pk)
 
 
 	async def get_subs(self, /) -> tuple[str, ...]:

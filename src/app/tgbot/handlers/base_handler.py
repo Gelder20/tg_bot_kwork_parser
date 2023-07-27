@@ -2,20 +2,20 @@ from aiogram.filters.command import Command
 from aiogram.types import Message
 from aiogram import Router
 
-from services.db_service import new_sub, del_sub, get_subs
+from app.services.db_service import new_sub, del_sub, get_subs
 
 
 
 
-router = Router()
+base_handler = Router()
 
 
-@router.message(Command('start'))
+@base_handler.message(Command('start'))
 async def start(message: Message):
 	await message.answer('Привет, чтобы видеть уведомления в чате введи `/sub`\nА чтобы больше ничего не видеть `/unsub`', parse_mode='markdown')
 
 
-@router.message(Command('sub'))
+@base_handler.message(Command('sub'))
 async def sub(message: Message):
 	id_ = str(message.chat.id)
 	if id_ not in get_subs():
@@ -26,7 +26,7 @@ async def sub(message: Message):
 		await message.answer('В этот чат уже приходят уведомления.')
 
 
-@router.message(Command('unsub'))
+@base_handler.message(Command('unsub'))
 async def unsub(message: Message):
 	id_ = str(message.chat.id)
 	if id_ in get_subs():

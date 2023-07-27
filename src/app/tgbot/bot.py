@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram import Bot as _Bot
 
-from services.kwork_parser_service import OrderView
+from app.services.kwork_parser_service import OrderView
 
 
 

@@ -30,6 +30,7 @@ async def main():
 		await dp.storage.close()
 		await bot.session.close()
 		await parser.close()
+		await repo.conn.close()
 
 
 if __name__ == '__main__':

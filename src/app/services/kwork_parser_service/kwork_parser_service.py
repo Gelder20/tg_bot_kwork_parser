@@ -12,7 +12,7 @@ import warnings # no idea why this class is not recommended to inherit
 warnings.filterwarnings('ignore', message='Inheritance class KworkParser from ClientSession is discouraged')
 
 
-from app.services.db_service import get_orders, new_order
+from app.services.db_service import Repo_interface
 
 
 
@@ -23,12 +23,14 @@ OrderView = namedtuple('OrderView', 'message, url')
 
 class KworkParser(ClientSession):
 	executor: ThreadPoolExecutor = None
+	repo: Repo_interface = None
 
 
 	@classmethod
-	def create(cls, base_url='https://kwork.ru', *args, **kwargs):
+	def create(cls, repo: Repo_interface, executor=None, base_url='https://kwork.ru', *args, **kwargs):
 		self = cls(base_url, *args, **kwargs)
-		self.executor = ThreadPoolExecutor(max_workers=2)
+		self.repo = repo
+		self.executor = executor if executor else ThreadPoolExecutor(max_workers=2)
 		return self
 
 
@@ -42,12 +44,10 @@ class KworkParser(ClientSession):
 		# I think there is nothing wrong with _, because this class is the heir
 		payload = await self.connector._loop.run_in_executor(self.executor, self.get_payload, html)
 		
-		old_orders = get_orders()
-
 		views = []
 		for order in payload:
-			if order['id'] not in old_orders:
-				new_order(order['id'])
+			if not await self.repo.has_order(order['id']):
+				await self.repo.new_order(order['id'])
 				views.append(await self.connector._loop.run_in_executor(self.executor, self.get_order_view, order))
 
 		return views

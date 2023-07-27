@@ -1,11 +1,11 @@
 from asyncio import sleep, timeout
 from aiogram.exceptions import TelegramRetryAfter, TelegramBadRequest
-from app.services.db_service import get_subs
+from app.services.db_service import Repo_interface
 
 
 
 
-async def scheduler(bot, parser, delay=10):
+async def scheduler(bot, parser, repo: Repo_interface, delay: int | float = 10):
 	while True:
 		try:
 			async with timeout(60) as cm:
@@ -25,7 +25,7 @@ async def scheduler(bot, parser, delay=10):
 		while views: # it is assumed that views is much smaller than get_subs()
 			# the mailing list may be delayed if there are a lot of chats,
 			# so after each order, new subs are received
-			for chat_id in get_subs():
+			for chat_id in map(lambda record: record['id'], await repo.get_subs()):
 				try:
 					await bot.send_order(chat_id, views[0])
 

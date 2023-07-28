@@ -1,3 +1,7 @@
+from asyncio import sleep, timeout
+
+from aiogram.exceptions import TelegramRetryAfter, TelegramBadRequest
+
 from .scheduler import scheduler
 from .services.interfaces import IOrdersParser, IOrdersSendingRepo, IUIForOrdersSending
 from .services.data_objects import Order

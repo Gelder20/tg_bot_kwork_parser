@@ -1,6 +1,3 @@
-from asyncio import sleep, timeout
-from aiogram.exceptions import TelegramRetryAfter, TelegramBadRequest
-from app.services.db_service import Repo_interface
 
 
 def scheduler(delay: int | float = 10):

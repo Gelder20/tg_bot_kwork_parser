@@ -88,6 +88,27 @@ class KworkParserNewOrders(_KworkParserBase):
 		)['wantsListData']['pagination']['data']
 
 
+class KworkCategories(_KworkParserBase):
+	async def get_categories(self):
+		async with self.session.get('/projects') as response:
+			html = await response.text()
+
+		data = await self.loop.run_in_executor(self.executor, self.get_categories_data, html)
+		
+		for category in data.values():
+			print(category['CATID'], category['name'])
+			for cat in category['cats']:
+				print('---', cat['CATID'], cat['name'])
+
+	@staticmethod
+	def get_categories_data(html):
+		data = BeautifulSoup(html, 'lxml').find_all('script')[11].text
+		return loads(
+			data[data.find('window.stateData=') + 17:-1]
+		)['categoriesWithFavoritesList']
+
+
+
 class KworkParser(
 	KworkParserGetOrders,
 	KworkParserNewOrders,
@@ -100,12 +121,13 @@ if __name__ == '__main__':
 
 
 	async def main():
-		parser = KworkParser(ClientSession('https://kwork.ru'))
+		parser = KworkCategories(ClientSession('https://kwork.ru'))
 		try:
 			# ids = await parser.parse()
 			# for id in ids:
 				# print(await parser.render(id))
-			print(await parser.render(2132309))
+			# print(await parser.render(2132309))
+			print(await parser.get_categories())
 
 		finally:
 			await parser.close()

@@ -67,10 +67,10 @@ class Repo_psql(Repo_interface):
 		return await self.conn.fetchval("SELECT EXISTS (SELECT * FROM orders WHERE id = $1)", pk)
 
 
-	async def get_subs(self, /) -> tuple[str, ...]:
-		return await self.conn.fetch("""
+	async def get_subs(self, /) -> map:
+		return map(lambda x: x['id'], await self.conn.fetch("""
 			SELECT * FROM subs;
-		""")
+		"""))
 
 
 	async def new_sub(self, /, id_: str) -> None:

@@ -3,8 +3,6 @@ from aiogram.exceptions import TelegramRetryAfter, TelegramBadRequest
 from app.services.db_service import Repo_interface
 
 
-
-
 async def scheduler(bot, parser, repo: Repo_interface, delay: int | float = 10):
 	while True:
 		try:

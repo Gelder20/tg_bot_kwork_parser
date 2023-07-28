@@ -1,87 +1,114 @@
 from aiohttp import ClientSession
 from aiohttp.web import HTTPError
+from bs4 import BeautifulSoup
+from jinja2 import Environment
 
-from asyncio import run
 from json import loads
-from concurrent.futures import ThreadPoolExecutor
-from collections import namedtuple
-
-
-import warnings # no idea why this class is not recommended to inherit
-# the github says something like "there is no full backward compatibility", but I don't override the parent methods...
-warnings.filterwarnings('ignore', message='Inheritance class KworkParser from ClientSession is discouraged')
-
-
-from app.services.db_service import Repo_interface
+from concurrent.futures import Executor
+from asyncio import get_event_loop, AbstractEventLoop
 
 
 
 
-# TODO: dataclass
-OrderView = namedtuple('OrderView', 'message, url')
+__env = Environment(enable_async=True)
+_template = __env.from_string(
+"""{{ name }}{% if allow_higher_price %}
+Желаемая цена: до {{ to_int(price_limit) }}
+Допустимый бюджет: до {{ to_int(price_limit) * 3 }}{% else %}
+Цена: до {{ to_int(price_limit) }}{% endif %}
+Откликов на данный момент: {{ kwork_count }}
+
+{{ desc }}
+"""
+)
 
 
-class KworkParser(ClientSession):
-	executor: ThreadPoolExecutor = None
-	repo: Repo_interface = None
+class _KworkParserBase:
+	session: ClientSession = None
+	executor: Executor = None
+	loop: AbstractEventLoop = None
 
 
-	@classmethod
-	def create(cls, repo: Repo_interface, executor=None, base_url='https://kwork.ru', *args, **kwargs):
-		self = cls(base_url, *args, **kwargs)
-		self.repo = repo
-		self.executor = executor if executor else ThreadPoolExecutor(max_workers=2)
-		return self
+	def __init__(self, session: ClientSession, loop: AbstractEventLoop = None, executor: Executor = None) -> None:
+		self.session = session
+		self.executor = executor
+		self.loop = loop if loop else get_event_loop()
 
 
-	async def parse(self):
-		async with self.get('/projects?c=41&attr=3587') as response:
+	async def close(self, *args, **kwargs) -> None:
+		response = self.session.close(*args, **kwargs)
+		if self.executor:
+			self.executor.shutdown()
+
+		await response
+
+
+class KworkParserGetOrders(_KworkParserBase):
+	template = None
+
+
+	def __init__(self, *args, template=None, **kwargs) -> None:
+		super().__init__(*args, **kwargs)
+		self.template = template if template else _template
+
+
+	async def render(self, id_) -> tuple[str, str]:
+		async with self.session.get(f'/projects/{id_}/view') as response:
+			html = await response.text()
+
+		payload = await self.loop.run_in_executor(self.executor, self.get_order_data, html)
+		return await _template.render_async(**payload['want'], to_int=lambda x: int(float(x)))
+
+
+	@staticmethod
+	def get_order_data(html) -> dict:
+		soup = BeautifulSoup(html, 'lxml')
+		data = soup.find_all('script')[49].text
+
+		return loads(data[16:data.rfind(';window.usersPortfolioCategories')])
+
+
+class KworkParserNewOrders(_KworkParserBase):
+	async def parse(self) -> tuple[int, ...]:
+		async with self.session.get('/projects?c=41&attr=3587') as response:
 			if response.status != 200:
 				raise HTTPError("Request attempt to '/projects?c=41&attr=3587' failed")
 
 			html = await response.text()
 
-		# I think there is nothing wrong with _, because this class is the heir
-		payload = await self.connector._loop.run_in_executor(self.executor, self.get_payload, html)
-		
-		views = []
-		for order in payload:
-			if not await self.repo.has_order(order['id']):
-				await self.repo.new_order(order['id'])
-				views.append(await self.connector._loop.run_in_executor(self.executor, self.get_order_view, order))
+		data = await self.loop.run_in_executor(self.executor, self.get_new_orders_data, html)
+		return tuple(map(lambda x: x['id'], data))
 
-		return views
 
 	@staticmethod
-	def get_payload(html: str):
+	def get_new_orders_data(html: str) -> dict:
+		data = BeautifulSoup(html, 'lxml').find_all('script')[11].text
 		return loads(
-			html.split('\n')[39].split('window.stateData=')[1].split('</script>')[0][:-1]
+			data[data.find('window.stateData=') + 17:-1]
 		)['wantsListData']['pagination']['data']
 
 
-	@staticmethod
-	def get_order_view(order: dict):
-		view = []
-
-		view.append(f"{order['name']}")
-
-		price = int(float(order['price_limit']))
-		if order['allow_higher_price']:
-			view.append(f'Желаемый бюджет: до {price}')
-			view.append(f'Допустимый: до {price*3}')
-		else:
-			view.append(f'Цена: до {price}')
-
-		view.append(f'Откликов на момент поста: {order["kwork_count"]}\n')
-
-		view.append(order['desc'])
-
-		return OrderView(('\n').join(view), f"https://kwork.ru/projects/{order['id']}/view")
+class KworkParser(
+	KworkParserGetOrders,
+	KworkParserNewOrders,
+): pass
 
 
-	# here I slightly redefined the parent method, but I didn't change its logic a bit
-	async def close(self, *args, **kwargs):
-		response = super().close(*args, **kwargs)
-		self.executor.shutdown()
-		return await response
 
+if __name__ == '__main__':
+	from asyncio import run
+
+
+	async def main():
+		parser = KworkParser(ClientSession('https://kwork.ru'))
+		try:
+			# ids = await parser.parse()
+			# for id in ids:
+				# print(await parser.render(id))
+			print(await parser.render(2132309))
+
+		finally:
+			await parser.close()
+
+
+	run(main())

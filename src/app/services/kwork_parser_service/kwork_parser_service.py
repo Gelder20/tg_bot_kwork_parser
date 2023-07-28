@@ -4,8 +4,8 @@ from bs4 import BeautifulSoup
 from jinja2 import Environment
 
 from json import loads
-from concurrent.futures import ThreadPoolExecutor
-from asyncio import get_event_loop
+from concurrent.futures import Executor
+from asyncio import get_event_loop, AbstractEventLoop
 
 
 
@@ -25,11 +25,11 @@ _template = __env.from_string(
 
 class _KworkParserBase:
 	session: ClientSession = None
-	executor: ThreadPoolExecutor = None
-	loop = None
+	executor: Executor = None
+	loop: AbstractEventLoop = None
 
 
-	def __init__(self, session, loop=None, executor=None) -> None:
+	def __init__(self, session: ClientSession, loop: AbstractEventLoop = None, executor: Executor = None) -> None:
 		self.session = session
 		self.executor = executor
 		self.loop = loop if loop else get_event_loop()

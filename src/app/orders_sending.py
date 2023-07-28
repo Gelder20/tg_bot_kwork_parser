@@ -37,6 +37,7 @@ class NewOrdersSending:
 				try:
 					await self.UI.send_order(chat_id, await self.parser.get_order_by_id(i))
 
+				# TODO: перенести
 				except TelegramRetryAfter as e:
 					await sleep(e.retry_after)
 

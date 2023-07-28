@@ -31,7 +31,7 @@ class NewOrdersSending:
 
 			for chat_id in await self.repo.get_subs():
 				try:
-					await self.UI.send_order(chat_id, views[0])
+					await self.UI.send_order(chat_id, await self.parser.get_order_by_id(i))
 
 				except TelegramRetryAfter as e:
 					await sleep(e.retry_after)

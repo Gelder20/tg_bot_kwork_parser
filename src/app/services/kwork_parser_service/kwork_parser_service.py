@@ -99,6 +99,10 @@ class KworkCategories(_KworkParserBase):
 			print(category['CATID'], category['name'])
 			for cat in category['cats']:
 				print('---', cat['CATID'], cat['name'])
+				attributes = cat.get('attributes')
+				if attributes:
+					for attr in attributes.values():
+						print('   ', '-', attr['id'], attr['title'])
 
 	@staticmethod
 	def get_categories_data(html):

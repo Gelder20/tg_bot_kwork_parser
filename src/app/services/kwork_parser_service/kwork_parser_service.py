@@ -1,3 +1,7 @@
+import warnings
+warnings.simplefilter('default')
+
+
 from aiohttp import ClientSession
 from aiohttp.web import HTTPError
 from bs4 import BeautifulSoup
@@ -19,18 +23,28 @@ class _KworkParserBase:
 	loop: AbstractEventLoop = None
 
 
-	def __init__(self, session: ClientSession, loop: AbstractEventLoop = None, executor: Executor = None) -> None:
-		self.session = session
+	def __init__(self, *, _session: ClientSession = None, loop: AbstractEventLoop = None, executor: Executor = None) -> None:
+		if not executor:
+			warnings.warn('\nIt is recommended to pass executor for more control and guarantee resource consumption', ResourceWarning)
 		self.executor = executor
+
 		self.loop = loop if loop else get_event_loop()
 
+		# Important: you should initialize session last, that in case of an initialization error,
+		# the created session does not remain incomplete
+		if _session is not None and _session._base_url != 'https://kwork.ru':
+			raise ValueError("base_url in ClientSession must be 'https://kwork.ru'")
+
+		else:
+			_session = ClientSession('https://kwork.ru')
+
+		self.session = _session
 
 	async def close(self, *args, **kwargs) -> None:
-		response = self.session.close(*args, **kwargs)
 		if self.executor:
 			self.executor.shutdown()
 
-		await response
+		await self.session.close(*args, **kwargs)
 
 
 class KworkParserGetOrders(_KworkParserBase):
@@ -94,6 +108,7 @@ class KworkCategories(_KworkParserBase):
 					for attr in attributes.values():
 						print('   ', '-', attr['id'], attr['title'])
 
+
 	@staticmethod
 	def get_categories_data(html):
 		data = BeautifulSoup(html, 'lxml').find_all('script')[11].text
@@ -116,14 +131,14 @@ if __name__ == '__main__':
 
 
 	async def main():
-		parser = KworkCategories(ClientSession('https://kwork.ru'))
+		parser = KworkCategories()
 		try:
 			# ids = await parser.parse()
 			# for id in ids:
 				# print(await parser.render(id))
 			# print(await parser.render(2132309))
-			print(await parser.get_categories())
-
+			# print(await parser.get_categories())
+			pass
 		finally:
 			await parser.close()
 

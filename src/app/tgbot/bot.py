@@ -1,8 +1,9 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram import Bot as _Bot
 from jinja2 import Environment
+from dataclasses import asdict
 
-from app.services.data_objects import Order, asdict
+from app.services.data_objects import Order
 
 
 

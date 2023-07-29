@@ -1,12 +1,6 @@
-from dataclasses import (
-	asdict as _asdict,
-	dataclass,
-)
+from dataclasses import dataclass
 
 
-
-
-asdict = _asdict
 
 
 @dataclass

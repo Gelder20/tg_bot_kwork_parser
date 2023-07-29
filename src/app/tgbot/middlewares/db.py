@@ -1,19 +1,18 @@
-from .base_middleware import MyMiddleware
+from aiogram import BaseMiddleware
 from app.services.db_service import Repo_psql
 
 
 
 
-class DbMiddleware(MyMiddleware):
+class DbMiddleware(BaseMiddleware):
     def __init__(self, pool):
         super().__init__()
         self.pool = pool
 
-    async def pre_process(self, handler, event, data):
-        data['repo'] = Repo_psql(await self.pool.acquire())
-        return handler
 
+    async def __call__(self, handler, event, data):
+        async with self.pool.acquire() as conn:
+            data['repo'] = Repo_psql(conn)
+            result = await handler(event, data)
 
-    async def post_process(self, handler, event, data, result):
-        await self.pool.release(data['repo'].conn)
-        del data['repo']
+        return result

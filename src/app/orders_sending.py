@@ -18,7 +18,7 @@ class NewOrdersSending:
 		self.UI = UI
 
 	@scheduler(10)
-	async def send_orders():
+	async def send_orders(self):
 		try:
 			async with timeout(60) as cm:
 				orders = await self.parser.get_new_orders_ids()
@@ -27,15 +27,15 @@ class NewOrdersSending:
 			print('Can not get orders')
 
 
-		for i in orders: 
-			if await self.repo.has_order(i):
+		for id_ in orders: 
+			if await self.repo.has_order(id_):
 				continue
 			else:
-				await self.repo.new_order(i)
+				await self.repo.new_order(id_)
 
 			for chat_id in await self.repo.get_subs():
 				try:
-					await self.UI.send_order(chat_id, await self.parser.get_order_by_id(i))
+					await self.UI.send_order(chat_id, await self.parser.get_order_by_id(id_))
 
 				# TODO: перенести
 				except TelegramRetryAfter as e:

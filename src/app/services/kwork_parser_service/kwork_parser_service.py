@@ -1,26 +1,16 @@
 from aiohttp import ClientSession
 from aiohttp.web import HTTPError
 from bs4 import BeautifulSoup
-from jinja2 import Environment
 
 from json import loads
 from concurrent.futures import Executor
 from asyncio import get_event_loop, AbstractEventLoop
 
 
+from ..data_objects import Order
+from ..interfaces import IOrdersParser
 
 
-__env = Environment(enable_async=True)
-_template = __env.from_string(
-"""{{ name }}{% if allow_higher_price %}
-Желаемая цена: до {{ to_int(price_limit) }}
-Допустимый бюджет: до {{ to_int(price_limit) * 3 }}{% else %}
-Цена: до {{ to_int(price_limit) }}{% endif %}
-Откликов на данный момент: {{ kwork_count }}
-
-{{ desc }}
-"""
-)
 
 
 class _KworkParserBase:
@@ -44,20 +34,20 @@ class _KworkParserBase:
 
 
 class KworkParserGetOrders(_KworkParserBase):
-	template = None
-
-
-	def __init__(self, *args, template=None, **kwargs) -> None:
-		super().__init__(*args, **kwargs)
-		self.template = template if template else _template
-
-
-	async def render(self, id_) -> tuple[str, str]:
+	async def get_order_by_id(self, id_) -> Order:
 		async with self.session.get(f'/projects/{id_}/view') as response:
 			html = await response.text()
 
-		payload = await self.loop.run_in_executor(self.executor, self.get_order_data, html)
-		return await _template.render_async(**payload['want'], to_int=lambda x: int(float(x)))
+		payload = (await self.loop.run_in_executor(self.executor, self.get_order_data, html))['want']
+
+		return Order(
+			id_=id_,
+			name=payload['name'],
+			allow_higher_price=payload['allow_higher_price'],
+			price_limit=payload['price_limit'],
+			responces_count=payload['kwork_count'],
+			desc=payload['desc'],
+		)
 
 
 	@staticmethod
@@ -69,7 +59,7 @@ class KworkParserGetOrders(_KworkParserBase):
 
 
 class KworkParserNewOrders(_KworkParserBase):
-	async def parse(self) -> tuple[int, ...]:
+	async def get_new_orders_ids(self) -> tuple[int, ...]:
 		async with self.session.get('/projects?c=41&attr=3587') as response:
 			if response.status != 200:
 				raise HTTPError("Request attempt to '/projects?c=41&attr=3587' failed")
@@ -116,6 +106,7 @@ class KworkCategories(_KworkParserBase):
 class KworkParser(
 	KworkParserGetOrders,
 	KworkParserNewOrders,
+	IOrdersParser,
 ): pass
 
 

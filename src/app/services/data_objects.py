@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
 
 @dataclass
@@ -7,5 +7,5 @@ class Order:
 	name: str
 	allow_higher_price: bool
 	price_limit: int
-	number_of_responces: int
+	responces_count: int
 	desc: str

@@ -12,7 +12,8 @@ def scheduler(delay: int | float = 10):
 					await func(*args, **kwargs)
 				except Exception as e:
 					#TODO убрать заглушку
-					print(e)
+					print(f'Error in schedule task {func.__name__}:\n{e}\n{repr(e)}')
+					
 				await sleep(delay)
 		return wrapper
 	return decorator

@@ -13,7 +13,7 @@ _template = __env.from_string(
 Желаемая цена: до {{ to_int(price_limit) }}
 Допустимый бюджет: до {{ to_int(price_limit) * 3 }}{% else %}
 Цена: до {{ to_int(price_limit) }}{% endif %}
-Откликов на данный момент: {{ kwork_count }}
+Откликов на данный момент: {{ responces_count }}
 
 {{ desc }}
 """
@@ -25,7 +25,7 @@ class Bot(_Bot):
 	async def send_order(self, chat_id: int | str, order: Order):
 		await self.send_message(
 			chat_id,
-			await _template.render_async(**asdict(order)),
+			await _template.render_async(**asdict(order), to_int=lambda x: int(float(x))),
 			reply_markup=InlineKeyboardMarkup(
 				inline_keyboard=[[
 					InlineKeyboardButton(

@@ -34,18 +34,18 @@ class _KworkParserBase:
 
 
 class KworkParserGetOrders(_KworkParserBase):
-	async def render(self, id_) -> Order:
+	async def get_order_by_id(self, id_) -> Order:
 		async with self.session.get(f'/projects/{id_}/view') as response:
 			html = await response.text()
 
-		payload = await self.loop.run_in_executor(self.executor, self.get_order_data, html)['want']
+		payload = (await self.loop.run_in_executor(self.executor, self.get_order_data, html))['want']
 
 		return Order(
 			id_=id_,
 			name=payload['name'],
 			allow_higher_price=payload['allow_higher_price'],
 			price_limit=payload['price_limit'],
-			number_of_responces=payload['kwork_count'],
+			responces_count=payload['kwork_count'],
 			desc=payload['desc'],
 		)
 
@@ -59,7 +59,7 @@ class KworkParserGetOrders(_KworkParserBase):
 
 
 class KworkParserNewOrders(_KworkParserBase):
-	async def parse(self) -> tuple[int, ...]:
+	async def get_new_orders_ids(self) -> tuple[int, ...]:
 		async with self.session.get('/projects?c=41&attr=3587') as response:
 			if response.status != 200:
 				raise HTTPError("Request attempt to '/projects?c=41&attr=3587' failed")
@@ -79,9 +79,9 @@ class KworkParserNewOrders(_KworkParserBase):
 
 
 class KworkParser(
-	IOrdersParser,
 	KworkParserGetOrders,
 	KworkParserNewOrders,
+	IOrdersParser,
 ): pass
 
 

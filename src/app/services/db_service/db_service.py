@@ -1,6 +1,8 @@
 from asyncpg import Connection
 from abc import ABC, abstractmethod
 
+from ..interfaces import IOrdersSendingRepo
+
 
 
 
@@ -31,7 +33,7 @@ class Repo_interface(ABC):
 	async def has_sub(self, /, pk: int) -> bool: pass
 
 
-class Repo_psql(Repo_interface):
+class Repo_psql(Repo_interface, IOrdersSendingRepo):
 	conn: Connection = None
 
 

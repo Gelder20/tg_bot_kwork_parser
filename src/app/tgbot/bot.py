@@ -4,6 +4,7 @@ from jinja2 import Environment
 from dataclasses import asdict
 
 from app.services.data_objects import Order
+from app.services.interfaces import IUIForOrdersSending
 
 
 
@@ -22,7 +23,7 @@ _template = __env.from_string(
 _url_template = 'https://kwork.ru/projects/{id}/view'
 
 
-class Bot(_Bot):
+class Bot(_Bot, IUIForOrdersSending):
 	async def send_order(self, chat_id: int | str, order: Order):
 		await self.send_message(
 			chat_id,

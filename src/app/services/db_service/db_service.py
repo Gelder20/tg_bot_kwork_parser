@@ -5,7 +5,7 @@ from ..interfaces import IOrdersSendingRepo
 
 
 
-
+#TODO: убрать это отсюда
 class Repo_interface(ABC):
 	# TODO: add DTO signatures
 	@abstractmethod

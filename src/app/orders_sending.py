@@ -17,6 +17,7 @@ class NewOrdersSending:
 		self.repo = repo
 		self.UI = UI
 
+	#TODO: вынести в конфиг
 	@scheduler(10)
 	async def send_orders(self):
 		try:

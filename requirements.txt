@@ -1,3 +1,6 @@
-https://github.com/aiogram/aiogram/archive/refs/heads/dev-3.x.zip
-aiohttp
-asyncpg
+aiogram==3.0.0b8
+aiohttp==3.8.5
+asyncpg==0.28.0
+beautifulsoup4==4.12.2
+Jinja2==3.1.2
+lxml==4.9.3

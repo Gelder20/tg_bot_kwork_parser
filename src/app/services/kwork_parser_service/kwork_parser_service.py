@@ -1,11 +1,10 @@
+from json import loads
+from concurrent.futures import Executor
+from asyncio import get_event_loop, AbstractEventLoop, timeout
+
 from aiohttp import ClientSession
 from aiohttp.web import HTTPError
 from bs4 import BeautifulSoup
-
-from json import loads
-from concurrent.futures import Executor
-from asyncio import get_event_loop, AbstractEventLoop
-
 
 from ..data_objects import Order
 from ..interfaces import IOrdersParser
@@ -60,14 +59,24 @@ class KworkParserGetOrders(_KworkParserBase):
 
 class KworkParserNewOrders(_KworkParserBase):
 	async def get_new_orders_ids(self) -> tuple[int, ...]:
-		async with self.session.get('/projects?c=41&attr=3587') as response:
-			if response.status != 200:
-				raise HTTPError("Request attempt to '/projects?c=41&attr=3587' failed")
+		orders_ids = tuple()
+		
+		try:
+			async with timeout(60) as cm:
+				async with self.session.get('/projects?c=41&attr=3587') as response:
+					if response.status != 200:
+						raise HTTPError("Request attempt to '/projects?c=41&attr=3587' failed")
 
-			html = await response.text()
+					html = await response.text()
 
-		data = await self.loop.run_in_executor(self.executor, self.get_new_orders_data, html)
-		return tuple(map(lambda x: x['id'], data))
+				data = await self.loop.run_in_executor(self.executor, self.get_new_orders_data, html)
+				orders_ids = tuple(map(lambda x: x['id'], data))
+
+
+		except TimeoutError:
+			print('Can not get orders')
+
+		return orders_ids
 
 
 	@staticmethod

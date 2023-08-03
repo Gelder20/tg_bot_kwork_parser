@@ -25,16 +25,26 @@ _url_template = 'https://kwork.ru/projects/{id}/view'
 
 class Bot(_Bot, IUIForOrdersSending):
 	async def send_order(self, chat_id: int | str, order: Order):
-		await self.send_message(
-			chat_id,
-			await _template.render_async(**asdict(order), to_int=lambda x: int(float(x))),
-			reply_markup=InlineKeyboardMarkup(
-				inline_keyboard=[[
-					InlineKeyboardButton(
-						text='Перейти',
-						url=_url_template.format(id=order.id_),
-					),
-				]],
-			),
-			disable_web_page_preview=True,
-		)
+		try:
+			await self.send_message(
+				chat_id,
+				await _template.render_async(**asdict(order), to_int=lambda x: int(float(x))),
+				reply_markup=InlineKeyboardMarkup(
+					inline_keyboard=[[
+						InlineKeyboardButton(
+							text='Перейти',
+							url=_url_template.format(id=order.id_),
+						),
+					]],
+				),
+				disable_web_page_preview=True,
+			)
+		except TelegramRetryAfter as e:
+			await sleep(e.retry_after)
+
+		except TelegramBadRequest as e:
+			if e.message == 'Bad Request: chat not found':
+				#TODO добавить ошибку
+				pass
+			else:
+				print(f'Error in mailing (1):\n{repr(e)}\n{e}')

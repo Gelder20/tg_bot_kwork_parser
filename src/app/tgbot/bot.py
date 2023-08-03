@@ -48,3 +48,6 @@ class Bot(_Bot, IUIForOrdersSending):
 				pass
 			else:
 				print(f'Error in mailing (1):\n{repr(e)}\n{e}')
+		except Exception as e:
+			#TODO изменить сообщения ошибок
+			print(f'Error in mailing (2):\n{repr(e)}\n{e}')

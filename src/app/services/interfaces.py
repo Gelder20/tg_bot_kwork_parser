@@ -9,7 +9,7 @@ class IOrdersParser(ABC):
 	async def get_new_orders_ids(self) -> tuple[int, ...]: pass
 
 	@abstractmethod
-	async def get_order_by_id(self, id: int) -> Order: pass
+	async def get_order_by_id(self, id: int) -> Order | None: pass
 
 
 class IUIForOrdersSending(ABC):

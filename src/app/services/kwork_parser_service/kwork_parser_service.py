@@ -34,19 +34,28 @@ class _KworkParserBase:
 
 class KworkParserGetOrders(_KworkParserBase):
 	async def get_order_by_id(self, id_) -> Order:
-		async with self.session.get(f'/projects/{id_}/view') as response:
-			html = await response.text()
+		order = None
+		try:
+			async with timeout(60) as cm:
+				async with self.session.get(f'/projects/{id_}/view') as response:
+					html = await response.text()
+		
+				payload = (await self.loop.run_in_executor(self.executor, self.get_order_data, html))['want']
 
-		payload = (await self.loop.run_in_executor(self.executor, self.get_order_data, html))['want']
+			order = Order(
+				id_=id_,
+				name=payload['name'],
+				allow_higher_price=payload['allow_higher_price'],
+				price_limit=payload['price_limit'],
+				responces_count=payload['kwork_count'],
+				desc=payload['desc'],
+			)
 
-		return Order(
-			id_=id_,
-			name=payload['name'],
-			allow_higher_price=payload['allow_higher_price'],
-			price_limit=payload['price_limit'],
-			responces_count=payload['kwork_count'],
-			desc=payload['desc'],
-		)
+		except Exception as e:
+			print(f'Can not get order by ID: {e}')
+
+		return order
+
 
 
 	@staticmethod
@@ -73,8 +82,8 @@ class KworkParserNewOrders(_KworkParserBase):
 				orders_ids = tuple(map(lambda x: x['id'], data))
 
 
-		except TimeoutError:
-			print('Can not get orders')
+		except Exception as e:
+			print(f'Can not get orders: {e}')
 
 		return orders_ids
 

@@ -22,20 +22,20 @@ class NewOrdersSending:
 	#TODO: вынести в конфиг
 	@scheduler(10)
 	async def send_orders(self):
-		
-		orders = await self.parser.get_new_orders_ids()
+		try:
+			orders = await self.parser.get_new_orders_ids()
 
-		for id_ in orders: 
-			if await self.repo.has_order(id_):
-				continue
+			for id_ in orders: 
+				if await self.repo.has_order(id_):
+					continue
 			
-			await self.repo.new_order(id_)
+				await self.repo.new_order(id_)
 
-			for chat_id in await self.repo.get_subs():
-				try:
-					await self.UI.send_order(chat_id, await self.parser.get_order_by_id(id_))
-				except Exception as e:
-					#TODO изменить сообщения ошибок и желательно перенести его отсюда
-					print(f'Error in mailing (2):\n{repr(e)}\n{e}')
+				for chat_id in await self.repo.get_subs():
+					order = await self.parser.get_order_by_id(id_)
+					if order:
+						await self.UI.send_order(chat_id, order)
 
-			await sleep(0.8)
+				await sleep(0.8)
+		except Exception as e:
+			print(f"Error in send_orders: {e}")
